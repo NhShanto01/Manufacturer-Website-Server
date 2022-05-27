@@ -74,6 +74,27 @@ async function run() {
             res.send(result);
         });
 
+
+        // User - section
+
+
+
+
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await carUserCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin });
+        })
+
+
+
+
+
+
+
+
+
         // Profile - section
 
         app.post('/update', async (req, res) => {
