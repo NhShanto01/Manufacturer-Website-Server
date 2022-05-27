@@ -43,6 +43,7 @@ async function run() {
         const carUserCollection = client.db("car-parts").collection("users");
         const profileCollection = client.db("car-parts").collection("profiles");
         const orderCollection = client.db("car-parts").collection("orders");
+        const reviewCollection = client.db("car-parts").collection("reviews");
 
         // CarParts - section
 
@@ -119,6 +120,22 @@ async function run() {
         app.get('/allorder', async (req, res) => {
             const order = await orderCollection.find({}).toArray();
             res.send(order);
+        });
+
+
+        // Review -section
+
+        app.get('/review', async (req, res) => {
+            const query = {};
+            const cursor = reviewCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        });
+
+        app.post('/review', async (req, res) => {
+            const newPost = req.body;
+            const result = await reviewCollection.insertOne(newPost);
+            res.send(result);
         });
 
 
