@@ -41,6 +41,7 @@ async function run() {
         console.log('connected');
         const carPartCollection = client.db("car-parts").collection("parts");
         const carUserCollection = client.db("car-parts").collection("users");
+        const profileCollection = client.db("car-parts").collection("profiles");
         const orderCollection = client.db("car-parts").collection("orders");
 
         // CarParts - section
@@ -72,8 +73,27 @@ async function run() {
             res.send(result);
         });
 
+        // Profile - section
 
-        // Order 
+        app.post('/update', async (req, res) => {
+            const newItem = req.body;
+            const result = await profileCollection.insertOne(newItem);
+            res.send(result);
+        });
+
+        app.get('/user', async (req, res) => {
+            const email = req.query.email;
+            const result = await profileCollection.findOne({ email })
+            if (result) {
+                res.send(result);
+            }
+            else {
+                res.send('User not Found')
+            }
+        })
+
+
+        // Order - section
 
         app.post('/order', async (req, res) => {
             const order = req.body;
