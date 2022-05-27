@@ -77,7 +77,10 @@ async function run() {
 
         // User - section
 
-
+        app.get('/users', async (req, res) => {
+            const users = await carUserCollection.find().toArray();
+            res.send(users)
+        });
 
 
         app.get('/admin/:email', async (req, res) => {
