@@ -41,9 +41,9 @@ async function run() {
         console.log('connected');
         const carPartCollection = client.db("car-parts").collection("parts");
         const carUserCollection = client.db("car-parts").collection("users");
+        const orderCollection = client.db("car-parts").collection("orders");
 
-
-        // Get-METHOD
+        // CarParts - section
 
         app.get('/parts', async (req, res) => {
             const query = {};
@@ -59,6 +59,47 @@ async function run() {
             res.send(result);
         });
 
+        app.delete('/delete/parts/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await carPartCollection.deleteOne(query);
+            res.send(result);
+        });
+
+        app.post('/add', async (req, res) => {
+            const newItem = req.body;
+            const result = await carPartCollection.insertOne(newItem);
+            res.send(result);
+        });
+
+
+        // Order 
+
+        app.post('/order', async (req, res) => {
+            const order = req.body;
+            const result = await orderCollection.insertOne(order);
+            res.send(result);
+        });
+
+        app.get('/order', async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            const query = { customer: email }
+            const order = await orderCollection.find(query).toArray();
+            res.send(order);
+        });
+
+        app.delete('/delete/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(query);
+            res.send(result);
+        });
+
+        app.get('/allorder', async (req, res) => {
+            const order = await orderCollection.find({}).toArray();
+            res.send(order);
+        });
 
 
 
