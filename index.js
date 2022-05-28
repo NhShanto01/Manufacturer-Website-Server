@@ -41,7 +41,7 @@ async function run() {
         await client.connect();
         console.log('connected');
         const carPartCollection = client.db("car-parts").collection("parts");
-        const carUserCollection = client.db("car-parts").collection("users");
+        const userCollection = client.db("car-parts").collection("users");
         const profileCollection = client.db("car-parts").collection("profiles");
         const orderCollection = client.db("car-parts").collection("orders");
         const reviewCollection = client.db("car-parts").collection("reviews");
@@ -82,41 +82,53 @@ async function run() {
 
         app.get('/users', async (req, res) => {
             const query = {};
-            const users = await carUserCollection.find(query).toArray();
+            const users = await userCollection.find(query).toArray();
             res.send(users)
         });
 
 
-        app.get('/admin/:email', async (req, res) => {
-            const email = req.params.email;
-            const user = await carUserCollection.findOne({ email: email });
-            const isAdmin = user.role === 'admin';
-            res.send({ admin: isAdmin });
-        })
-
-        // app.put('/user/:email', async (req, res) => {
+        // app.get('/admin/:email', async (req, res) => {
         //     const email = req.params.email;
-        //     const user = req.body;
-        //     const filter = { email: email };
-        //     const options = { upsert: true };
-        //     const updateDoc = {
-        //         $set: user
-        //     };
-        //     const result = await carUserCollection.updateOne(filter, updateDoc, options);
-        //     res.send(result);
+        //     const user = await userCollection.findOne({ email: email });
+        //     const isAdmin = user.role === 'admin';
+        //     res.send({ admin: isAdmin });
         // });
 
-        app.put('/users/:email', async (req, res) => {
+        app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
             const filter = { email: email };
-            // const options = { upsert: true };
+            const options = { upsert: true };
             const updateDoc = {
                 $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ result, token });
+        });
+
+        app.put('/user/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({ email: requester })
+            if (requesterAccount.role == 'admin') {
+                const filter = { email: email };
+                const updateDoc = {
+                    $set: { role: 'admin' },
+                };
+                const result = await userCollection.updateOne(filter, updateDoc);
+                res.send(result);
             }
-            const result = await carUserCollection.updateOne(filter, updateDoc);
+
+        });
+
+        app.delete('/delete/user/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
             res.send(result);
-        })
+        });
+
 
 
 
