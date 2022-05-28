@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors());
 app.use(express.json());
@@ -77,8 +78,11 @@ async function run() {
 
         // User - section
 
+
+
         app.get('/users', async (req, res) => {
-            const users = await carUserCollection.find().toArray();
+            const query = {};
+            const users = await carUserCollection.find(query).toArray();
             res.send(users)
         });
 
@@ -90,11 +94,29 @@ async function run() {
             res.send({ admin: isAdmin });
         })
 
+        // app.put('/user/:email', async (req, res) => {
+        //     const email = req.params.email;
+        //     const user = req.body;
+        //     const filter = { email: email };
+        //     const options = { upsert: true };
+        //     const updateDoc = {
+        //         $set: user
+        //     };
+        //     const result = await carUserCollection.updateOne(filter, updateDoc, options);
+        //     res.send(result);
+        // });
 
-
-
-
-
+        app.put('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            // const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            }
+            const result = await carUserCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
 
 
 
@@ -133,6 +155,13 @@ async function run() {
             const order = await orderCollection.find(query).toArray();
             res.send(order);
         });
+        app.get('/order/:id', async (req, res) => {
+            const id = req.params?.id;
+            console.log(id);
+            const query = { _id: ObjectId(id) };
+            const result = await orderCollection.findOne(query);
+            res.send(result);
+        });
 
         app.delete('/delete/order/:id', async (req, res) => {
             const id = req.params.id;
@@ -162,8 +191,19 @@ async function run() {
             res.send(result);
         });
 
+        // Payment - section
 
-
+        app.post('/create-payment-intent', async (req, res) => {
+            const service = req.body;
+            const price = service.price;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({ clientSecret: paymentIntent.client_secret })
+        });
 
     }
     finally {
